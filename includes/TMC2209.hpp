@@ -91,7 +91,7 @@ public:
 		// PWMCONF: StealthChop enabled (silent)
 		write_register(0x70, 0x000114D4);  
 	}
-}; // End TMC2209 class
+};
 
 // Still need to set up the UART so initializing to not set up
 int TMC2209::uart_fd = -1;
