@@ -12,11 +12,13 @@ public:
 	int step_pin, dir_pin;
 	TMC2209 tmc;
     int steps_per_unit;
+    double default_degrees;
+    double current_position_deg;
 	
-	Stepper(int h, int step, int dir, uint8_t tmc_addr, int steps_per = 400) : gpio_handle(h), step_pin(step), dir_pin(dir), tmc(tmc_addr), steps_per_unit(steps_per) {
+
+	Stepper(int h, int step, int dir, uint8_t tmc_addr, double steps_per_degree, double default_movement=45.0) : gpio_handle(h), step_pin(step), dir_pin(dir), tmc(tmc_addr), steps_per_unit(steps_per_degree), default_degrees(default_movement), current_position_deg(0.0) {
         lgGpioClaimOutput(gpio_handle, 0, step_pin, 0);
-        // **********************
-        lgGpioClaimOutput(gpio_handle, 9, dir_pin, 0);
+        lgGpioClaimOutput(gpio_handle, 0, dir_pin, 0);
         lgGpioWrite(gpio_handle, step_pin, 0);
 	}
 	
@@ -43,28 +45,41 @@ public:
 		for (int i = 0; i < count; ++i){
 			move(dir, pulse_us);
 		}
+        current_position_deg += (dir * 1.0 * count) / steps_per_unit;
 	}
 
     void move_degrees(double degrees, int pulse_us = 1000) {
-        move_steps(static_cast<int>(degrees * steps_per_unit), pulse_us);
+        double steps = degrees * steps_per_unit;
+
+        move_steps(static_cast<int>(steps), pulse_us);
     }
 
-    void raster_scan(double degrees, int pulse_us = 1000) {
-        std::cout << "Raster: - " << right_degrees << " to 0 to +" << right degrees << std::endl;
+    void raster_scan(int pulse_us = 1000) {
+        std::cout << "Raster: - " << default_degrees << " to 0 to +" << default_degrees << std::endl;
 
-        move_degrees(-degrees, pulse_us);
-
-        lguSleep(0.1);
-
-        move_degrees(+degrees, pulse_us);
+        move_degrees(-default_degrees, pulse_us);
 
         lguSleep(0.1);
 
-        move_degrees(+degrees, pulse_us);
+        move_degrees(+default_degrees, pulse_us);
 
         lguSleep(0.1);
 
-        move_degrees(-degrees, pulse_us);
+        move_degrees(+default_degrees, pulse_us);
+
+        lguSleep(0.1);
+
+        move_degrees(-default_degrees, pulse_us);
+    }
+
+    void home(int pulse_us = 10000) {
+        std::cout << "Returning to home from " << current_position_deg << " to 0 " << std::endl;
+        move_degrees(-current_position_deg, pulse_us);
+        current_position_deg = 0.0;
+    }
+
+    double get_position() {
+        return current_position_deg;
     }
 };
 

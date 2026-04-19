@@ -41,7 +41,7 @@ public:
     void log_scan(std::chrono::high_resolution_clock::time_point scan_start_time) {
         auto scan_end = std::chrono::high_resolution_clock::now();
         
-        auto program_elapsed_s = std::chrono::duration_cast<std::chrono::seconds>(scan_end - program_start).count();
+        double program_elapsed_s = std::chrono::duration<double>(scan_end - program_start).count();
         
         double scan_duration_s = std::chrono::duration<double>(scan_end - scan_start_time).count();
 
@@ -51,7 +51,7 @@ public:
         csv_file << scan_count << "," << program_elapsed_s << "," << scan_duration_s << "\n";
         csv_file.flush();
 
-        std::cout << "[LOG] Scan #" << scan_count << " | Duration: " << scan_duration_s << " s | Total time: " << program_elapsed_s/1000.0 << "s\n";
+        std::cout << "[LOG] Scan #" << scan_count << " | Duration: " << scan_duration_s << " s | Total time: " << program_elapsed_s << "s\n";
     }
 
     void print_summary () {
