@@ -7,41 +7,59 @@
 #include <chrono>
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
 
 class ScanLogger {
 private:
-    std::ofstream csv_file, txt_file;
+    std::string scan_dir = "scan_data";
+    std::string log_dir = "logs";
+    std::ofstream scan_file, txt_file;
     std::vector<double> scan_times;
     int scan_count = 0;
     std::chrono::high_resolution_clock::time_point program_start;
 public:
     ScanLogger() : program_start(std::chrono::high_resolution_clock::now()) {
+        char* scan_env = getenv("SCAN_DATA_DIR");
+        if (scan_env) {
+            scan_dir = scan_env;
+        }
+        
+        char* log_env = getenv("SCAN_LOG_DIR");
+        if (log_env) {
+            log_dir = log_env;
+        }
+
+        // Make sure the folders have been created
+        system(("mkdir -p " + scan_dir).c_str());
+        system(("mkdir -p " + log_dir).c_str());
+
         // Gets current date so each csv name is unique
         auto now = std::chrono::system_clock::now();
         auto time_t = std::chrono::system_clock::to_time_t(now);
         auto tm = *std::localtime(&time_t);
 
         // Stepper running scan count csv
-        std::ostringstream filename;
-        filename << "stepper_test_history__" << std::put_time(&tm, "%Y-%m-%d__%H-%M") << ".csv";
+        std::ostringstream scanname;
+        scanname << scan_dir << "/stepper_test_history__" << std::put_time(&tm, "%Y-%m-%d__%H-%M") << ".csv";
 
-        csv_file.open(filename.str());
-        csv_file << "scan_count,timestamp_s,duration_s\n";
-        csv_file.flush();
+        scan_file.open(scanname.str());
+        scan_file << "scan_count,timestamp_s,duration_s\n";
+        scan_file.flush();
 
-        std::cout << "Logging raster scan counts to: " << filename.str() << std::endl;
+        std::cout << "Logging raster scan counts to: " << scanname.str() << std::endl;
 
 
         // Log Text file
         std::ostringstream txtname;
-        txtname << "wallops_operation_log__" << std::put_time(&tm, "%Y-%m-%d__%H-%M") << ".txt";
+        txtname << log_dir << "/wallops_operation_log__" << std::put_time(&tm, "%Y-%m-%d__%H-%M") << ".txt";
         txt_file.open(txtname.str());
         txt_file << "[GOOD MORNING, WALLOPS!!!] " << std::put_time(&tm, "%Y-%m-%d__%H-%M") << "\n";
         std::cout << "Text logging to: " << txtname.str() << std::endl; 
     }
 
     ~ScanLogger() {
-        csv_file.close();
+        scan_file.close();
+        txt_file.close();
     }
 
     std::chrono::high_resolution_clock::time_point start_scan() {
@@ -58,8 +76,8 @@ public:
         scan_times.push_back(scan_duration_s);
         scan_count++;
 
-        csv_file << scan_count << "," << program_elapsed_s << "," << scan_duration_s << "\n";
-        csv_file.flush();
+        scan_file << scan_count << "," << program_elapsed_s << "," << scan_duration_s << "\n";
+        scan_file.flush();
 
         std::cout << "[LOG] Scan #" << scan_count << " | Duration: " << scan_duration_s << " s | Total time: " << program_elapsed_s << "s\n";
 
@@ -69,7 +87,7 @@ public:
     void log(const std::string& message) {
         auto now = std::chrono::high_resolution_clock::now();
         double elapsed_s = std::chrono::duration<double>(now - program_start).count();
-        std::string timestamp = "[" + std::to_string(elapsed_s).substr(0.8) + "s] " + message;
+        std::string timestamp = "[" + std::to_string(elapsed_s).substr(0,8) + "s] " + message;
 
         std::cout << timestamp << "\n";
         txt_file << timestamp << "\n";
