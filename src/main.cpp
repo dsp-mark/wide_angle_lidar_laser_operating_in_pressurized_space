@@ -65,8 +65,8 @@ int main() {
 
 
     const double ALT_DEGREES = 25.0;
-    // STEP=10, DIR=22, STEPS=222/25
-    Stepper altitude(h, 10, 22, 1, 222.0/25, ALT_DEGREES);
+    // STEP=11, DIR=22, STEPS=222/25
+    Stepper altitude(h, 11, 22, 1, 222.0/25, ALT_DEGREES);
     altitude.configure();
     g_altitude = &altitude;
     
