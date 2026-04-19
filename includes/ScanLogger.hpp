@@ -10,16 +10,18 @@
 
 class ScanLogger {
 private:
-    std::ofstream csv_file;
+    std::ofstream csv_file, txt_file;
     std::vector<double> scan_times;
     int scan_count = 0;
     std::chrono::high_resolution_clock::time_point program_start;
 public:
     ScanLogger() : program_start(std::chrono::high_resolution_clock::now()) {
+        // Gets current date so each csv name is unique
         auto now = std::chrono::system_clock::now();
         auto time_t = std::chrono::system_clock::to_time_t(now);
         auto tm = *std::localtime(&time_t);
 
+        // Stepper running scan count csv
         std::ostringstream filename;
         filename << "stepper_test_history__" << std::put_time(&tm, "%Y-%m-%d__%H-%M") << ".csv";
 
@@ -27,7 +29,15 @@ public:
         csv_file << "scan_count,timestamp_s,duration_s\n";
         csv_file.flush();
 
-        std::cout << "Test data logging to: " << filename.str() << std::endl;
+        std::cout << "Logging raster scan counts to: " << filename.str() << std::endl;
+
+
+        // Log Text file
+        std::ostringstream txtname;
+        txtname << "wallops_operation_log__" << std::put_time(&tm, "%Y-%m-%d__%H-%M") << ".txt";
+        txt_file.open(txtname.str());
+        txt_file << "[GOOD MORNING, WALLOPS!!!] " << std::put_time(&tm, "%Y-%m-%d__%H-%M") << "\n";
+        std::cout << "Text logging to: " << txtname.str() << std::endl; 
     }
 
     ~ScanLogger() {
@@ -52,6 +62,18 @@ public:
         csv_file.flush();
 
         std::cout << "[LOG] Scan #" << scan_count << " | Duration: " << scan_duration_s << " s | Total time: " << program_elapsed_s << "s\n";
+
+        log("Scan #" + std::to_string(scan_count) + "complete");
+    }
+
+    void log(const std::string& message) {
+        auto now = std::chrono::high_resolution_clock::now();
+        double elapsed_s = std::chrono::duration<double>(now - program_start).count();
+        std::string timestamp = "[" + std::to_string(elapsed_s).substr(0.8) + "s] " + message;
+
+        std::cout << timestamp << "\n";
+        txt_file << timestamp << "\n";
+        txt_file.flush();
     }
 
     void print_summary () {
