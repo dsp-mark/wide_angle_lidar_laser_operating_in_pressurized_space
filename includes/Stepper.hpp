@@ -5,14 +5,17 @@
 #include <lgpio.h>
 #include <cmath>
 
+// Azimuth and Altitude now both use Stepper class
 class Stepper {
 public:
     int gpio_handle;
 	int step_pin, dir_pin;
 	TMC2209 tmc;
+    int steps_per_unit;
 	
-	Stepper(int h, int step, int dir, uint8_t tmc_addr) : gpio_handle(h), step_pin(step), dir_pin(dir), tmc(tmc_addr) {
+	Stepper(int h, int step, int dir, uint8_t tmc_addr, int steps_per = 400) : gpio_handle(h), step_pin(step), dir_pin(dir), tmc(tmc_addr), steps_per_unit(steps_per) {
         lgGpioClaimOutput(gpio_handle, 0, step_pin, 0);
+        // **********************
         lgGpioClaimOutput(gpio_handle, 9, dir_pin, 0);
         lgGpioWrite(gpio_handle, step_pin, 0);
 	}
@@ -24,7 +27,7 @@ public:
 	
 	// Move a single step in a given direction
 	void move(int dir, int pulse_us = 1000) {
-		lgGpioWrite(gpio_handle, dir_path, dir > 0 ? 1 : 0);
+		lgGpioWrite(gpio_handle, dir_pin, dir > 0 ? 1 : 0);
         lgGpioWrite(gpio_handle, step_pin, 1);
         lguSleep(0.000001 * pulse_us);
         lgGpioWrite(gpio_handle, step_pin, 0);
@@ -41,6 +44,28 @@ public:
 			move(dir, pulse_us);
 		}
 	}
+
+    void move_degrees(double degrees, int pulse_us = 1000) {
+        move_steps(static_cast<int>(degrees * steps_per_unit), pulse_us);
+    }
+
+    void raster_scan(double degrees, int pulse_us = 1000) {
+        std::cout << "Raster: - " << right_degrees << " to 0 to +" << right degrees << std::endl;
+
+        move_degrees(-degrees, pulse_us);
+
+        lguSleep(0.1);
+
+        move_degrees(+degrees, pulse_us);
+
+        lguSleep(0.1);
+
+        move_degrees(+degrees, pulse_us);
+
+        lguSleep(0.1);
+
+        move_degrees(-degrees, pulse_us);
+    }
 };
 
 #endif
