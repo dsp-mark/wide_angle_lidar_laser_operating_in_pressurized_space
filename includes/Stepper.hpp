@@ -4,6 +4,7 @@
 #include "TMC2209.hpp"
 #include <lgpio.h>
 #include <cmath>
+#include <iostream>
 
 // Azimuth and Altitude now both use Stepper class
 class Stepper {
@@ -51,11 +52,12 @@ public:
     void move_degrees(double degrees, int pulse_us = 1000) {
         double steps = degrees * steps_per_unit;
 
+        std::cout << "Moving: - " << current_position_deg << " to " << default_degrees << std::endl;
+
         move_steps(static_cast<int>(steps), pulse_us);
     }
 
     void raster_scan(int pulse_us = 1000) {
-        std::cout << "Raster: - " << default_degrees << " to 0 to +" << default_degrees << std::endl;
 
         move_degrees(-default_degrees, pulse_us);
 

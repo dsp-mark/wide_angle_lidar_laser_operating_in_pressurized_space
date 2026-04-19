@@ -5,7 +5,9 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <csignal
+#include <csignal>
+#include <sys/select.h>
+#include <sys/time.h>
 
 Stepper* g_azimuth = nullptr;
 Stepper* g_altitude = nullptr;
@@ -21,7 +23,7 @@ void signal_handler(int sig) {
         g_azimuth->home(STEP_US);
     }
     if (g_altitude) {
-        g_altitde->home(STEP_US);
+        g_altitude->home(STEP_US);
     }
 
     std::cout << "Shutting down" << std::endl;
@@ -56,15 +58,15 @@ int main() {
 	}
 	
     const double AZ_DEGREES = 45.0;
-    // STEP=27, DIR=27, ID=0, STEPS=400/45
-	Stepper azimuth(h, 27, 17, 0, 400/45, AZ_DEGREES);
+    // STEP=27, DIR=17, ID=0, STEPS=400/45
+	Stepper azimuth(h, 27, 17, 0, 400.0/45, AZ_DEGREES);
     azimuth.configure();
     g_azimuth = &azimuth;
 
 
     const double ALT_DEGREES = 25.0;
     // STEP=10, DIR=22, STEPS=222/25
-    Stepper altitude(h, 10, 22, 1, 222/25, ALT_DEGREES);
+    Stepper altitude(h, 10, 22, 1, 222.0/25, ALT_DEGREES);
     altitude.configure();
     g_altitude = &altitude;
     
@@ -88,6 +90,10 @@ int main() {
     newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
+    fd_set readfds;
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
     // Scan continues indefinitely until ENTER is pressed
     // Check is at end so the raster scan isn't interrupted
 	while (true) {		
@@ -114,9 +120,17 @@ int main() {
 
 		std::cout << "==============> RASTER " << ++curr_scans << " COMPLETE" << std::endl;
 
-        // If ENTER is read, it'll shut down the system.
-        if (read(STDIN_FILENO, &newt, 1) > 0){
-            break;
+        FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+        int activity = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout);
+
+        if (activity > 0 && FD_ISSET(STDIN_FILENO, &readfds)) {
+            char ch;
+            read(STDIN_FILENO, &ch, 1);
+            if (ch=='\n' || ch == '\r'){
+                std::cout << "\nEnter pressed - stopping" << std::endl;
+                break;
+            }
         }
 	}
 

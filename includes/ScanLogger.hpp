@@ -12,7 +12,7 @@
 class ScanLogger {
 private:
     std::string scan_dir = "scan_data";
-    std::string log_dir = "logs";
+    std::string log_dir = "scan_logs";
     std::ofstream scan_file, txt_file;
     std::vector<double> scan_times;
     int scan_count = 0;
@@ -79,9 +79,9 @@ public:
         scan_file << scan_count << "," << program_elapsed_s << "," << scan_duration_s << "\n";
         scan_file.flush();
 
-        std::cout << "[LOG] Scan #" << scan_count << " | Duration: " << scan_duration_s << " s | Total time: " << program_elapsed_s << "s\n";
+        std::cout << "[LOG] Scan # " << scan_count << "  | Duration: " << scan_duration_s << " s | Total time: " << program_elapsed_s << "s\n";
 
-        log("Scan #" + std::to_string(scan_count) + "complete");
+        log("Scan # " + std::to_string(scan_count) + " complete");
     }
 
     void log(const std::string& message) {

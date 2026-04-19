@@ -6,7 +6,7 @@ SRC = src/main.cpp
 INCLUDES = includes/*.hpp
 
 DATA_DIR = scan_data
-LOGS_DIR = logs
+SCAN_LOG_DIR = scan_logs
 LIDAR_DIR = lidar
 SCAN_DIRS = $(DATA_DIR) $(LOG_DIR) $(LIDAR_DIR)
 
@@ -47,7 +47,7 @@ clean:
 	rm -rf $(SCAN_DIRS)/*
 
 run: setup-folders $(TARGET)
-	sudo SCAN_DATA_DIR=$(DATA_DIR) SCAN_LOG_DIR=$(LOG_DIR) ./$(TARGET)
+	sudo SCAN_DATA_DIR=$(DATA_DIR) SCAN_LOG_DIR=$(SCAN_LOG_DIR) ./$(TARGET)
 
 flash: all run
 

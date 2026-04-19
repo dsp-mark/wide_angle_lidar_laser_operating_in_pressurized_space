@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <iostream>
 #include <unistd.h>
 
 class TMC2209 {
