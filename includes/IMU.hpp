@@ -15,17 +15,18 @@ private:
     int i2cFd = -1;
     Orientation current_position_;
 
-    bool writeBytes(const uint8_t* data, size_t len);
+    bool write_bytes(const uint8_t* data, size_t len);
 
-    bool readBytes(uint8_t* data, size_t len);
+    bool read_bytes(uint8_t* data, size_t len);
 
-    bool sendFeatureCommand(uint8_t reportId, uint16_t intervalUs);
+    bool send_feature_command(uint8_t reportId, uint16_t intervalUs);
 
-    bool readQuarternion(float &qr, float &qi, float &qj, float &qk);
+    bool read_quaternion(float &qr, float &qi, float &qj, float &qk);
 
-    static Orientation quaternionToYPR(float qr, float qi, float qj, float qk);
+    // Takes in a quaternion and returns yaw, pitch, and roll
+    static Orientation quaternion_to_rotational(float qr, float qi, float qj, float qk);
 
-    static float wrap180(float a);
+    static float wrap_180(float a);
 
 public:
     IMU();
@@ -36,7 +37,7 @@ public:
 
     bool update();
 
-    Orientation getOrientation() const;
+    Orientation get_orientation() const;
 };
 
 #endif

@@ -7,7 +7,7 @@ INCLUDES = includes/*.hpp
 
 DATA_DIR = scan_data
 SCAN_LOG_DIR = scan_logs
-LIDAR_DIR = lidar
+LIDAR_DIR = lidar_data
 SCAN_DIRS = $(DATA_DIR) $(LOG_DIR) $(LIDAR_DIR)
 
 LGPIO_REPO = https://github.com/joan2937/lg.git

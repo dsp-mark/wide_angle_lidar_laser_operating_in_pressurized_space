@@ -158,7 +158,7 @@ public:
             return false;
         }
         
-        std::string dated_csv_name = sensor_name + "_" + timestamp_string() + ".csv";
+        std::string dated_csv_name = "lidar_data" + sensor_name + "_" + timestamp_string() + ".csv";
         csvFile.open(dated_csv_name, std::ios::out | std::ios::trunc);
 
         if (!csvFile.is_open()) {
