@@ -1,16 +1,14 @@
 #include "IMU.hpp"
+
 #include <linux/i2c-dev.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cmath>
 #include <cstring>
 #include <sys/ioctl.h>
-#include <cstring>
 #include <iostream>
 
-static constexpr uint8_t BNO_ADDR = 0x4A;
 static constexpr const char* I2C_DEV = "/dev/i2c-1";
-static constexpr uint8_t REPORT_ROTATION_VECTOR = 0x05;
 
 IMU::IMU() = default;
 
@@ -24,26 +22,31 @@ bool IMU::begin() {
     i2cFd = open(I2C_DEV, O_RDWR);
 
     if (i2cFd < 0) {
-        std::cout << "Could not find I2C line" << std::endl;
+        std::cout << "Could not find I2C device" << I2C_DEV <<  std::endl;
         return false;
     }
 
     if (ioctl(i2cFd, I2C_SLAVE, BNO_ADDR) < 0) {
+        std::cout << "Could not set BNO085 I2C address" << std::endl;
+
         return false;
     }
-
-    uint8_t resetCmd[] = {0x00};
-
-    (void)resetCmd;
 
     return send_feature_command(REPORT_ROTATION_VECTOR, 5000);
 }
 
 bool IMU::update() {
+    uint8_t report[64] = {0};
+    size_t len = sizeof(report);
+
+    if (!read_report(report, len)) {
+        return false;
+    }
+
     // These will become the values read in by the IMU
     float qr, qi, qj, qk;
 
-    if (!read_quaternion(qr, qi, qj, qk)) {
+    if (!parse_rotation_vector(report, len, qr, qi, qj, qk)) {
         return false;
     }
 
@@ -77,17 +80,25 @@ bool IMU::send_feature_command(uint8_t report_id, uint16_t interval_us) {
     return write_bytes(cmd, sizeof(cmd));
 }
 
-bool IMU::read_quaternion(float &qr, float &qi, float &qj, float &qk) {
-    uint8_t buf[21] = {0};
+bool IMU::read_report(uint8_t* report, size_t& len) {
+    len = 21;
 
-    if (!read_bytes(buf, sizeof(buf))) {
+    if (!read_bytes(report, len)) {
         return false;
     }
 
-    int16_t raw_i = (int16_t)((buf[10] << 8) | buf[9]);
-    int16_t raw_j = (int16_t)((buf[12] << 8) | buf[11]);
-    int16_t raw_k = (int16_t)((buf[14] << 8) | buf[13]);
-    int16_t raw_r = (int16_t)((buf[16] << 8) | buf[15]);
+    return true;
+}
+
+bool IMU::parse_rotation_vector(const uint8_t* report, size_t len, float &qr, float &qi, float &qj, float &qk) {
+    if (len < 17) {
+        return false;
+    }
+
+    int16_t raw_i = (int16_t)((report[10] << 8) | report[9]);
+    int16_t raw_j = (int16_t)((report[12] << 8) | report[11]);
+    int16_t raw_k = (int16_t)((report[14] << 8) | report[13]);
+    int16_t raw_r = (int16_t)((report[16] << 8) | report[15]);
 
     const float scale = 1.0f / 16384.0f;
     qi = raw_i * scale;

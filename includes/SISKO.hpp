@@ -3,6 +3,7 @@
 
 #include "IMU.hpp"
 #include "Stepper.hpp"
+#include "ScanLogger.hpp"
 
 // Stepper IMU Start Keeping and Optimisation
 class SISKO {
@@ -10,19 +11,26 @@ private:
     IMU imu;
     Stepper azimuth;
     Stepper altitude;
+    ScanLogger logger;
 
     float drift_gain = 0.2f;
     float drift_threshold_deg = 0.5f;
 
+    static float wrap180_local(float a);
+
 public:
-    SISKO(int gpio_handle, int az_step, int az_dir, uint8_t az_tmc_addr, double az_steps_per_deg, double az_default_deg, int alt_step, int alt_dir, uint8_t alt_tmc_addr, double alt_steps_per_deg, double alt_degault_deg);
+    SISKO(int gpio_handle, int az_step, int az_dir, uint8_t az_tmc_addr, double az_steps_per_deg, double az_default_deg, int alt_step, int alt_dir, uint8_t alt_tmc_addr, double alt_steps_per_deg, double alt_default_deg);
 
     bool begin();
     bool update_imu();
+    
+    Orientation get_orientation() const;
+
+    void correct_drift();
     void scan_once();
     void home();
-    void correct_drift();
-    Orientation get_orientation() const;
+    
+    ScanLogger& get_logger();
 };
 
 #endif

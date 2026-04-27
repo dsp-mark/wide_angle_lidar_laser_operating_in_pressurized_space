@@ -12,12 +12,18 @@ public:
     int gpio_handle;
 	int step_pin, dir_pin;
 	TMC2209 tmc;
-    int steps_per_unit;
+    int steps_per_degree;
     double default_degrees;
     double current_position_deg;
 	
 
-	Stepper(int h, int step, int dir, uint8_t tmc_addr, double steps_per_degree, double default_movement=45.0) : gpio_handle(h), step_pin(step), dir_pin(dir), tmc(tmc_addr), steps_per_unit(steps_per_degree), default_degrees(default_movement), current_position_deg(0.0) {
+	Stepper(int h, int step, int dir, uint8_t tmc_addr, double steps_per_deg, double default_movement=45.0) : gpio_handle(h), 
+         step_pin(step), 
+         dir_pin(dir), 
+         tmc(tmc_addr), 
+         steps_per_degree(steps_per_deg), 
+         default_degrees(default_movement), 
+         current_position_deg(0.0) {
         lgGpioClaimOutput(gpio_handle, 0, step_pin, 0);
         lgGpioClaimOutput(gpio_handle, 0, dir_pin, 0);
         lgGpioWrite(gpio_handle, step_pin, 0);
@@ -46,15 +52,17 @@ public:
 		for (int i = 0; i < count; ++i){
 			move(dir, pulse_us);
 		}
-        current_position_deg += (dir * 1.0 * count) / steps_per_unit;
+
+        current_position_deg += (dir * 1.0 * count) / steps_per_degree;
 	}
 
     void move_degrees(double degrees, int pulse_us = 1000) {
-        double steps = degrees * steps_per_unit;
+        double exact_steps = degrees * steps_per_degree;
+        int steps = static_cast<int>(std::round(exact_steps));
 
         std::cout << "Moving: - " << current_position_deg << " to " << default_degrees << std::endl;
 
-        move_steps(static_cast<int>(steps), pulse_us);
+        move_steps(steps, pulse_us);
     }
 
     void raster_scan(int pulse_us = 1000) {
@@ -80,8 +88,12 @@ public:
         current_position_deg = 0.0;
     }
 
-    double get_position() {
+    double get_position() const {
         return current_position_deg;
+    }
+
+    void adjust_position(double change_deg) {
+        current_position_deg += change_deg;
     }
 };
 
