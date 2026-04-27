@@ -8,6 +8,8 @@
 
 // Azimuth and Altitude now both use Stepper class
 class Stepper {
+private:
+    SensorManager* lidar_manager = nullptr;
 public:
     int gpio_handle;
 	int step_pin, dir_pin;
@@ -33,6 +35,10 @@ public:
 		// Steppers always use a 600mA, 1/16 microstep TMC2209 set up
 		tmc.configure_stepper(600, 16);
 	}
+
+    void set_lidar_callback(SensorManager* manager) {
+        lidar_manager = manager;
+    }
 	
 	// Move a single step in a given direction
 	void move(int dir, int pulse_us = 1000) {
@@ -54,6 +60,10 @@ public:
 		}
 
         current_position_deg += (dir * 1.0 * count) / steps_per_degree;
+
+        if (lidar_manager && (i % LIDAR_TRIGGER_STEPS == 0)) {
+            lidar_manager->poll_all();
+        }
 	}
 
     void move_degrees(double degrees, int pulse_us = 1000) {

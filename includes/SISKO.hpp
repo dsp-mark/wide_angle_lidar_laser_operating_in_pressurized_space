@@ -12,6 +12,11 @@ private:
     Stepper azimuth;
     Stepper altitude;
     ScanLogger logger;
+    SensorManager* lidar;
+
+    double lidar_az_positions[] = {-30, -15, 0, 15, 30};
+    double lidar_alt_positions[] = {-20, 0, 20};
+
 
     float drift_gain = 0.2f;
     float drift_threshold_deg = 0.5f;
