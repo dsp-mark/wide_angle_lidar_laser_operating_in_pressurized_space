@@ -23,8 +23,8 @@ setup-folders:
 
 all: setup-folders $(TARGET)
 
-$(TARGET): $(SRC) $(INCLUDES)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
+$(TARGET): $(SRC) includes/WireShim.cpp $(INCLUDES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC) includes/WireShim.cpp $(LDFLAGS)
 
 install-deps:
 	@echo "Checking lgpio..."

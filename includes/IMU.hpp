@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include "Adafruit_BNO08x.h"
+#include "WireShim.hpp"
 
 struct Orientation {
     float yaw = 0.0f;

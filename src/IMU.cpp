@@ -4,12 +4,26 @@
 
 IMU::IMU() : bno08x() {}
 
-IMU::~IMU() {}
+IMU::~IMU() {
+    WireShim::cleanup();
+}
 
 bool IMU::begin() {
-    if (!bno08x.begin_I2C()) {
-        std::cout << "Failed to initialize IMU" << std::endl;
-        
+    if (!WireShim::init()) {
+        std::cout << "WireShim init failed" << std::endl;
+        return false;
+    }
+
+    bno08x._hal.open = i2chal_open;
+    bno08x._hal.read = i2chal_read;
+    bno08x._hal.write = i2chal_write;
+    bno08x._hal.close = i2chal_close;
+    bno08x._hal.getTimeUs = [](sh2_Hal_t *self) {
+        return static_cast<uint32_t>(micros());
+    };
+
+    if (!bno08x._init(0)) {
+        std::cout << "BNO08x _init failed" << std::endl;
         return false;
     }
 
